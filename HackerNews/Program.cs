@@ -115,23 +115,11 @@ namespace HackerNews
 
 		public static void Main (string[] args)
 		{
-			test2 ();
 			HtmlToText h = new HtmlToText ();
 			List<Dictionary<string, dynamic>> item = getKids (getBest () [0]);
 			Console.WriteLine (item.Count.ToString() + " comments.");
 			Console.WriteLine ("Best story: " + h.ConvertHtml (item [0] ["text"]) + " - by " + item [0] ["by"] + "\n");// + 
 				//((item[0]["descendants"] > 0) ? item[0]["kids"].Count.ToString() : "0") + " replies.");//+ item["url"]);
-		}
-
-		public static Tuple<string> test()
-		{
-			return new Tuple ("a", "b", "c");
-		}
-
-		public static void test2()
-		{
-			string a, b, c = test ();
-			Console.WriteLine (a + b + c);
 		}
 	}
 
