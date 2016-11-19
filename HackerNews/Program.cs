@@ -34,14 +34,8 @@ namespace HackerNews
 			return output.GetRange(0, Math.Min(limit, 50));
 		}
 
-		public static List<string> getTop(int limit = 50)
-		{
-			return getX (Constants.TOP, limit);
-		}
-
 		public static List<Tuple<string, Dictionary<string, dynamic>>> listX (List<string> ids, int limit = 50)
 		{
-			//List<string> ids = getX (Constants.TOP);
 			List<Thread> threads = new List<Thread>();
 			List<Tuple<string, Dictionary<string, dynamic>>> r = new List<Tuple<string, Dictionary<string, dynamic>>>();
 			foreach (string i in ids) {
@@ -63,21 +57,19 @@ namespace HackerNews
 			return r.GetRange(0, Math.Min(limit, 50));
 		}
 
+		public static List<string> getTop(int limit = 50)
+		{
+			return getX (Constants.TOP, limit);
+		}
+
 		public static List<string> getNew (int limit = 50) //Gets the IDs of the new stories
 		{
-			//HttpWebRequest r = (HttpWebRequest) WebRequest.Create (Constants.NEW);
 			return getX (Constants.NEW, limit);
 		}
 
 		public static List<string> getBest (int limit = 50) //Gets the IDs of the best stories
 		{
-			HttpWebRequest r = (HttpWebRequest) WebRequest.Create (Constants.BEST);
-			r.Method = WebRequestMethods.Http.Get;
-			r.Accept = "application/json";
-			WebResponse resp = r.GetResponse ();
-			DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(List<string>));
-			List<string> output = (List<string>)serializer.ReadObject (resp.GetResponseStream ());
-			return output.GetRange(0, Math.Min(limit, 50));
+			return getX (Constants.BEST, limit);
 		}
 
 		public static Dictionary<string,dynamic> getItem(string id)
@@ -139,7 +131,6 @@ namespace HackerNews
 					printStories (stories, selected);
 				}
 			}
-			//int indent = 0;
 			HtmlToText h = new HtmlToText ();
 			Dictionary<string, dynamic> selStory = stories[selected].Item2;
 			string story = selStory["title"] + "\n";
@@ -294,23 +285,6 @@ namespace HackerNews
 		public static void Main (string[] args)
 		{
 			selectCategory ();
-
-			//selectStory (listX(getTop()));
-
-			/*
-			writer.Indent = 0;
-			HtmlToText h = new HtmlToText ();
-			Dictionary<string, dynamic> best = getItem(getBest () [0]);
-			string story = best["title"] + "\n";
-			try {
-				story += h.ConvertHtml(best["text"]);
-			} catch {
-				story += best ["url"];
-			}
-			Console.WriteLine ("Best story:\n" + story + " - by " + best ["by"] + "\n\n");
-			List<Dictionary<string, dynamic>> comments = getKids (best ["id"].ToString());
-			Console.WriteLine (comments.Count.ToString() + " comments.");
-			printComments (comments);*/
 		}
 	}
 
