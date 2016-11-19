@@ -111,6 +111,7 @@ namespace HackerNews
 			Console.BackgroundColor = ConsoleColor.Black;
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.Clear ();
+			Console.WriteLine ("Stories:");
 			foreach (int i in Enumerable.Range(0, stories.Count)) {
 				if (i == selected) {
 					Console.BackgroundColor = ConsoleColor.White;
@@ -151,10 +152,11 @@ namespace HackerNews
 				story += selStory ["url"];
 			}
 			Console.Clear ();
-			Console.WriteLine (story + " - by " + selStory ["by"] + "\n\n");
+			Console.WriteLine (story + " - by " + selStory ["by"] + "\n");
+			Console.WriteLine ("Loading comments...");
 			List<Dictionary<string, dynamic>> comments = getKids (selStory ["id"].ToString());
-			Console.WriteLine (comments.Count.ToString() + " comments.");
-			printComments (comments, 2);
+			Console.WriteLine (comments.Count.ToString() + " comments.\n");
+			printComments (comments);
 		}
 
 		public static List<Dictionary<string, dynamic>> getKids (string id, int limit = -1)
@@ -190,10 +192,6 @@ namespace HackerNews
 		{
 			HtmlToText h = new HtmlToText ();
 			foreach (Dictionary<string, dynamic> c in comments) {
-				/*string kids = "";
-				try {
-					kids = c ["kids"].Count.ToString () + " replies.\n";
-				} catch {}*/
 				int kids;
 				try {
 					kids = c["kids"].Count;
@@ -205,7 +203,6 @@ namespace HackerNews
 					string s = indent(h.ConvertHtml(c["text"]), writer.Indent);
 					s = s.Remove (s.Length - 1);
 					Console.WriteLine(s);
-					//writer.WriteLine (h.ConvertHtml (c ["text"]));
 				} else {
 					writer.WriteLine ("[deleted]:");
 					writer.WriteLine ("[deleted]");
@@ -217,7 +214,6 @@ namespace HackerNews
 					writer.Indent -= 1;
 				}
 				Console.WriteLine ();
-				//Console.WriteLine (c ["by"] + ":\n" + h.ConvertHtml (c ["text"]) + "\n" + kids);
 			}
 		}
 
@@ -232,25 +228,76 @@ namespace HackerNews
 				int length = Console.BufferWidth - n * baseIndent;
 				string ind = new String (' ', baseIndent * n);
 				while (s != "" && s != ".") {
-					
-					//WIP - Trying
 					int index = (s.Length <= length) ?
 						s.Length - 1 : Math.Max(s.LastIndexOf (' ', length - 1), s.LastIndexOf('.', length - 1));
 					r += ind + s.Substring (0, index + 1) + "\n";
-					//Console.WriteLine (s.Substring (0, index + 1));
 					s = s.Remove (0, index + 1);
-					/*
-					r += ind + s.Substring (0, Math.Min (length, s.Length)) + "\n";
-					s = s.Remove (0, Math.Min (length, s.Length));*/
 				}
-				//r = r.Remove (r.Length - 1);
 				return r;
 			}
 		}
 
+		public static void printCategories(List<string> cat, int selected = 0) 
+		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Clear ();
+			Console.WriteLine ("Categories:");
+			foreach (int i in Enumerable.Range(0, 3)) {
+				if (i == selected) {
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
+					Console.WriteLine (cat [i]);
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.ForegroundColor = ConsoleColor.White;
+				} else {
+					Console.WriteLine (cat [i]);
+				}
+			}
+		}
+
+		public static void selectCategory(int selected = 0)
+		{
+			List<string> categories = new List<string>();
+			categories.Add ("Top");
+			categories.Add ("New");
+			categories.Add ("Best");
+			printCategories (categories);
+
+			ConsoleKey k = ConsoleKey.Spacebar;
+			while (k != ConsoleKey.Enter) {
+				k = Console.ReadKey ().Key;
+				if (k == ConsoleKey.DownArrow) {
+					selected = Math.Min (selected + 1, categories.Count - 1);
+					printCategories (categories, selected);
+				} else if (k == ConsoleKey.UpArrow) {
+					selected = Math.Max (selected - 1, 0);
+					printCategories (categories, selected);
+				}
+			}
+			List<string> ids = new List<string>();
+			switch (selected) {
+			case 0:
+				ids = getTop ();
+				break;
+			case 1:
+				ids = getNew ();
+				break;
+			case 2:
+				ids = getBest ();
+				break;
+			default:
+				break;
+			}
+			Console.WriteLine ("Loading stories...");
+			selectStory (listX(ids));
+		}
+
 		public static void Main (string[] args)
 		{
-			selectStory (listX(getTop()));
+			selectCategory ();
+
+			//selectStory (listX(getTop()));
 
 			/*
 			writer.Indent = 0;
