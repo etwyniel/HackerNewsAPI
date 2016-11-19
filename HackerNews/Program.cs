@@ -36,17 +36,34 @@ namespace HackerNews
 			List<string> output = (List<string>)serializer.ReadObject (resp.GetResponseStream ());
 			return output.GetRange(0, Math.Min(limit, 50));
 		}
-		
-		public static List<string> getTop (int limit = 50)
-		{
-			HttpWebRequest r = (HttpWebRequest) WebRequest.Create (Constants.TOP);
-			r.Method = WebRequestMethods.Http.Get;
-			r.Accept = "application/json";
-			WebResponse resp = r.GetResponse ();
-			DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(List<string>));
-			List<string> output = (List<string>) serializer.ReadObject(resp.GetResponseStream());
 
-			return output.GetRange(0, Math.Min(limit, 50));
+		public static List<string> getTop(int limit = 50)
+		{
+			return getX (Constants.TOP, limit);
+		}
+
+		public static List<Tuple<string, Dictionary<string, dynamic>>> listX (List<string> ids, int limit = 50)
+		{
+			//List<string> ids = getX (Constants.TOP);
+			List<Thread> threads = new List<Thread>();
+			List<Tuple<string, Dictionary<string, dynamic>>> r = new List<Tuple<string, Dictionary<string, dynamic>>>();
+			foreach (string i in ids) {
+				threads.Add (new Thread(() => addStory(i, r)));
+				threads [threads.Count - 1].Start ();
+			}
+			bool running = true;
+			while (running) {
+				running = false;
+				foreach (Thread t in threads) {
+					if (t.IsAlive) {
+						running = true;
+						break;
+					}
+				}
+				Thread.Sleep (20);
+			}
+
+			return r.GetRange(0, Math.Min(limit, 50));
 		}
 
 		public static List<string> getNew (int limit = 50) //Gets the IDs of the new stories
@@ -80,6 +97,64 @@ namespace HackerNews
 			}
 
 			return jss.Deserialize<Dictionary<string, dynamic>> (text);
+		}
+
+		public static void addStory (string id, List<Tuple<string, Dictionary<string, dynamic>>> list)
+		{
+			Dictionary<string, dynamic> item = getItem (id);
+			string title = ((item.ContainsKey ("title")) ? item ["title"] : item ["url"]) + " - by " + item ["by"];
+			//Console.WriteLine (title);
+			list.Add (new Tuple<string, Dictionary<string, dynamic>> (title, item));
+		}
+
+		public static void printStories(List<Tuple<string, Dictionary<string, dynamic>>> stories, int selected = 0) {
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.Clear ();
+			foreach (int i in Enumerable.Range(0, stories.Count)) {
+				if (i == selected) {
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
+					Console.WriteLine (stories [i].Item1);
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.ForegroundColor = ConsoleColor.White;
+				} else {
+					Console.WriteLine (stories [i].Item1);
+				}
+			}
+
+		}
+
+		public static void selectStory (List<Tuple<string, Dictionary<string, dynamic>>> stories)
+		{
+			printStories (stories);
+			int selected = 0;
+
+			ConsoleKey k = ConsoleKey.Spacebar;
+			while (k != ConsoleKey.Enter) {
+				k = Console.ReadKey ().Key;
+				if (k == ConsoleKey.DownArrow) {
+					selected = Math.Min (selected + 1, stories.Count - 1);
+					printStories (stories, selected);
+				} else if (k == ConsoleKey.UpArrow) {
+					selected = Math.Max (selected - 1, 0);
+					printStories (stories, selected);
+				}
+			}
+			writer.Indent = 0;
+			HtmlToText h = new HtmlToText ();
+			Dictionary<string, dynamic> selStory = stories[selected].Item2;
+			string story = selStory["title"] + "\n";
+			try {
+				story += h.ConvertHtml(selStory["text"]);
+			} catch {
+				story += selStory ["url"];
+			}
+			Console.Clear ();
+			Console.WriteLine (story + " - by " + selStory ["by"] + "\n\n");
+			List<Dictionary<string, dynamic>> comments = getKids (selStory ["id"].ToString());
+			Console.WriteLine (comments.Count.ToString() + " comments.");
+			printComments (comments, 2);
 		}
 
 		public static List<Dictionary<string, dynamic>> getKids (string id, int limit = -1)
@@ -175,6 +250,9 @@ namespace HackerNews
 
 		public static void Main (string[] args)
 		{
+			selectStory (listX(getTop()));
+
+			/*
 			writer.Indent = 0;
 			HtmlToText h = new HtmlToText ();
 			Dictionary<string, dynamic> best = getItem(getBest () [0]);
@@ -186,17 +264,8 @@ namespace HackerNews
 			}
 			Console.WriteLine ("Best story:\n" + story + " - by " + best ["by"] + "\n\n");
 			List<Dictionary<string, dynamic>> comments = getKids (best ["id"].ToString());
-			Console.WriteLine (comments.Count.ToString() + " comments.");/*
-			foreach (Dictionary<string, dynamic> c in comments) {
-				string kids = "";
-				try {
-					kids = c["kids"].Count.ToString() + " replies.\n";
-				} catch {};
-				Console.WriteLine (c ["by"] + ":\n" + h.ConvertHtml (c ["text"]) + "\n" + kids);
-			}*/
-			printComments (comments);
-			//Console.WriteLine ("Best story: " + h.ConvertHtml (item [0] ["text"]) + " - by " + item [0] ["by"] + "\n");// + 
-				//((item[0]["descendants"] > 0) ? item[0]["kids"].Count.ToString() : "0") + " replies.");//+ item["url"]);
+			Console.WriteLine (comments.Count.ToString() + " comments.");
+			printComments (comments);*/
 		}
 	}
 
