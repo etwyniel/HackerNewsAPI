@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.IO;
-using System.CodeDom.Compiler;
 using System.Threading;
 using System.Runtime.Serialization.Json;
 using System.Web.Script.Serialization;
@@ -155,6 +154,7 @@ namespace HackerNews
 			List<Dictionary<string, dynamic>> comments = getKids (selStory ["id"].ToString());
 			Console.WriteLine (comments.Count.ToString() + " comments.\n");
 			printComments (comments);
+            Console.Read();
 		}
 
 		public static List<Dictionary<string, dynamic>> getKids (string id, int limit = -1)
