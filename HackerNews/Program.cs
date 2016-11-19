@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.IO;
-using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Threading;
 using System.Runtime.Serialization.Json;
@@ -23,8 +22,7 @@ namespace HackerNews
 
 	class MainClass
 	{
-		//public static StringWriter baseWriter = new StringWriter();
-		public static IndentedTextWriter writer = new IndentedTextWriter (Console.Out, "    ");
+		//public static IndentedTextWriter writer = new IndentedTextWriter (Console.Out, "    ");
 
 		public static List<string> getX(string x, int limit)
 		{
@@ -142,7 +140,7 @@ namespace HackerNews
 					printStories (stories, selected);
 				}
 			}
-			writer.Indent = 0;
+			//int indent = 0;
 			HtmlToText h = new HtmlToText ();
 			Dictionary<string, dynamic> selStory = stories[selected].Item2;
 			string story = selStory["title"] + "\n";
@@ -199,19 +197,19 @@ namespace HackerNews
 					kids = 0;
 				}
 				if (!c.ContainsKey("deleted")) {
-					writer.WriteLine (c ["by"] + ":");
-					string s = indent(h.ConvertHtml(c["text"]), writer.Indent);
+                    string author = indent(c["by"] + ":", curDepth);
+                    author = author.Remove(author.Length - 1);
+                    Console.WriteLine (author);
+					string s = indent(h.ConvertHtml(c["text"]), curDepth);
 					s = s.Remove (s.Length - 1);
 					Console.WriteLine(s);
 				} else {
-					writer.WriteLine ("[deleted]:");
-					writer.WriteLine ("[deleted]");
-				}
+                    Console.WriteLine(indent("[deleted]:", curDepth));
+                    Console.WriteLine(indent("[deleted]", curDepth));
+                }
 				if (kids > 0 && (curDepth < maxDepth || maxDepth == -1)) {
-					writer.WriteLine ();
-					writer.Indent += 1;
+					Console.WriteLine ();
 					printComments (getKids(c["id"].ToString()), maxDepth, curDepth + 1);
-					writer.Indent -= 1;
 				}
 				Console.WriteLine ();
 			}
